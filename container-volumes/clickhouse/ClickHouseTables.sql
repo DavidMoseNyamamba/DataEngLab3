@@ -6,7 +6,7 @@ USE classicmodels;
 
 CREATE TABLE customers
 (
-    `customerNumber` UInt16,
+    `customerNumber` Int32,
     `customerName` Nullable(String),
     `contactLastName` Nullable(String),
     `contactFirstName` Nullable(String),
@@ -17,8 +17,8 @@ CREATE TABLE customers
     `state` Nullable(String),
     `postalCode` Nullable(String),
     `country` Nullable(String),
-    `salesRepEmployeeNumber` Nullable(UInt16),
-    `creditLimit` Nullable(Float32)
+    `salesRepEmployeeNumber` Nullable(Int32),
+    `creditLimit` Nullable(Float64)
 )
 ENGINE = ReplacingMergeTree
 PRIMARY KEY customerNumber
@@ -29,10 +29,10 @@ SETTINGS index_granularity = 50;
 
 CREATE TABLE payments
 (
-    `customerNumber` UInt16, -- Foreign key referencing customers
+    `customerNumber` Int32, -- Foreign key referencing customers
     `checkNumber` String,
     `paymentDate` Date,
-    `amount` Nullable(Float32)
+    `amount` Nullable(Float64)
 )
 ENGINE = ReplacingMergeTree
 PARTITION BY customerNumber

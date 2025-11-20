@@ -14,8 +14,10 @@ curl -i -X PUT -H "Content-Type:application/json" \
             "pk.mode": "record_key",
             "delete.enabled": "true",
             "pk.fields": "customerNumber",
-            "auto.create": "true",
-            "auto.evolve": "true",
+            "auto.create": "false",
+            "auto.evolve": "false",
             "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "value.converter": "org.apache.kafka.connect.json.JsonConverter"
+            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "key.converter.schemas.enable": "false",
+            "value.converter.schemas.enable": "false"
     }'
