@@ -5,8 +5,8 @@
 1. DAVID MOSE NYAMAMBA, 151353, 202509-C  
 2. TIMOTHY YONGA, 138362, 202509-C  
 3. GRACE WANJIGI, 145639, 202509-C  
-4. ANDY NJOGU, 120745, 202509-C   
-5. DAVID KIMONDO, 120751, 202509-C 
+4. ANDY NJOGU, 120745, 202509-C  
+5. DAVID KIMONDO, 120751, 202509-C
 
 ## Section 1: Deduplication Strategies
 
@@ -51,6 +51,7 @@ ClickHouse offers multiple read-side techniques:
 e. Examples
 
 - ReplacingMergeTree table definition (orders):
+
 ```sql
 CREATE TABLE classicmodels.orderdetails
 (
@@ -64,7 +65,9 @@ CREATE TABLE classicmodels.orderdetails
 ENGINE = ReplacingMergeTree(op_ts)
 PRIMARY KEY (orderNumber, productCode, orderLineNumber);
 ```
+
 Retrieve current state:
+
 ```sql
 SELECT
   orderNumber, productCode, orderLineNumber,
@@ -75,6 +78,7 @@ GROUP BY orderNumber, productCode, orderLineNumber;
 ```
 
 - CollapsingMergeTree example (with sign):
+
 ```sql
 CREATE TABLE classicmodels.products_changes
 (
@@ -85,9 +89,11 @@ CREATE TABLE classicmodels.products_changes
 ENGINE = CollapsingMergeTree(sign)
 PRIMARY KEY (productCode);
 ```
+
 Ingest +1 for insert/update and -1 for delete; after merges the table yields current state.
 
 f. Practical guidance  
+
 - Prefer ReplacingMergeTree with a reliable monotonically increasing version or timestamp for deterministic upserts.  
 - Disable sink auto-create in connectors; create ClickHouse tables manually with correct types to avoid JDBC mapping issues.  
 - Use argMax or grouped aggregation in queries for efficient reads; reserve `FINAL` for debugging or small datasets.  
@@ -96,6 +102,7 @@ f. Practical guidance
 ## Section 2: Additional Data Ingestion
 
 Ingest more data into:
+
 1. Fact table: `orderDetails`  
 2. Dimension table: `products`
 
@@ -137,12 +144,14 @@ PRIMARY KEY (productCode);
 
 Part B — Source connector update (kafka-connector-configs/submit_source-mysql-classicmodels-00_config.sh):  
 Update the connector to include the `table.whitelist` entries for `orderdetails` and `products` and ensure Debezium produces op timestamps and a proper topic name transform. Example connector options to add:
+
 - "table.whitelist": "classicmodels.orderdetails,classicmodels.products"
 - transforms: to strip schema prefix (RegexRouter or ExtractTopic)
 Ensure connector rest submission script is updated accordingly.
 
 Part C — Sink connectors (kafka-connector-configs):  
 Create six sink configs (three for orderdetails: insert/update/delete; three for products). Recommended approach: use a ClickHouse-specific sink or JDBC sink configured for upserts:
+
 - Disable `auto.create` and `auto.evolve`.
 - Use pk.mode=record_key and pk.fields matching primary keys.
 - Enable delete handling (e.g., delete.enabled=true) if connector supports it.
@@ -156,6 +165,7 @@ Name examples:
 
 Part D — Validation and screenshots  
 Steps to validate:
+
 1. Confirm tables exist in ClickHouse:
    - `docker exec -it clickhouse-server clickhouse-client --query "USE classicmodels; SHOW TABLES;"`
 2. Show latest state:
@@ -168,3 +178,14 @@ Steps to validate:
 Place screenshots below this line (insert images captured after verifying pipelines).
 
 ---
+
+### Screenshots
+
+- ClickHouse query output  
+  ![ClickHouse Tables](screenshots/clickhouse-tables.png)
+
+- Kafka Connect status  
+  ![Kafka Connect Status](screenshots/connect-status.png)
+
+- Kafka topics (ksqlDB SHOW TOPICS)  
+  ![Kafka Topics](screenshots/ksqldb-topics.png)
